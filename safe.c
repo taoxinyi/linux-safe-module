@@ -51,14 +51,19 @@ static void on_receive(struct sk_buff *skb)
     msg_size = sizeof(struct Message);
     nlh = (struct nlmsghdr *)skb->data;
     pid = nlh->nlmsg_pid;
-
-    printk("pid%d\n", pid);
-    printk("valid%d\n", is_process_valid(get_struct_task_from_pid(pid)));
-
     message = (struct Message *)nlmsg_data(nlh);
-    printk("%d\n", message->type);
-    printk("%s\n", message->password);
-    message->type = strcmp(message->password, DEFAULT_PASS);
+
+    if (is_process_valid(get_struct_task_from_pid(pid)))
+    {
+        if (!strcmp(message->filename, SAFE_DIR_SLASH) ||
+            !strcmp(message->filename, SAFE_DIR_NO_SLASH))
+            message->type = strcmp(message->password, DEFAULT_PASS);
+        else
+            message->type = -2;
+    }
+    else
+        message->type = -1;
+
     skb_out = nlmsg_new(msg_size, 0);
     if (!skb_out)
     {
@@ -80,7 +85,7 @@ int init_netlink(void)
         .input = on_receive,
     };
 
-    nl_sk = netlink_kernel_create(&init_net, NETLINK_USER, &cfg);
+    nl_sk = netlink_kernel_create(&init_net, 31, &cfg);
     if (!nl_sk)
         return -10;
     else
