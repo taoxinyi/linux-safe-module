@@ -22,7 +22,7 @@
 #define ALLOWED_UID 1000
 #define NETLINK_USER 31
 #define DEFAULT_PASS "12345"
-#define SAFE_APP_LOCATION "/home/xytao/linux-safe-desktop/node_modules/electron/dist/electron"
+#define SAFE_APP_LOCATION "/opt/safebox/safebox"
 
 /* create && open && close*/
 asmlinkage long fake_creat(const char __user *pathname, umode_t mode);
