@@ -416,7 +416,7 @@ asmlinkage long fake_newfstatat(int dfd, const char __user *filename, struct sta
             return -28;
         }
     }
-    return fake_newfstatat(dfd, filename, statbuf, flag);
+    return real_newfstatat(dfd, filename, statbuf, flag);
 }
 asmlinkage long fake_rename(const char __user *oldname, const char __user *newname)
 {
