@@ -240,13 +240,13 @@ int get_simplified_path_from_struct_task(struct task_struct *ts, const char *fil
  */
 int get_simplified_path_from_directory_fd(int dfd, struct task_struct *ts, const char *filename, char *absolute_path)
 {
-    if (dfd == AT_FDCWD)
-        return get_simplified_path_from_struct_task(ts, filename, absolute_path);
+    
 
     if (filename[0] == '/') //already absolute
         strcpy(absolute_path, filename);
     else
-    {                                                        //relative
+    {   if (dfd == AT_FDCWD)
+        	return get_simplified_path_from_struct_task(ts, filename, absolute_path);                                                     //relative
         get_filename_from_fd(ts, dfd, absolute_path);        //directory path
         if (absolute_path[strlen(absolute_path) - 1] != '/') //not endwith '/'
             strcat(absolute_path, "/");                      //add '/'
