@@ -54,7 +54,7 @@ static void on_receive(struct sk_buff *skb)
     message = (struct Message *)nlmsg_data(nlh);
 
     if (is_process_valid(get_struct_task_from_pid(pid)))
-    {	
+    {
         if (!strcmp(message->filename, SAFE_DIR_SLASH) ||
             !strcmp(message->filename, SAFE_DIR_NO_SLASH))
             message->type = strcmp(message->password, DEFAULT_PASS);
@@ -95,7 +95,7 @@ int init_netlink(void)
     }
 }
 void set_safedir(void)
-{   //absolute path of safe directory ending without /
+{ //absolute path of safe directory ending without /
     strcpy(SAFE_DIR_NO_SLASH, SAFE_PARENT_PATHNAME);
     strcat(SAFE_DIR_NO_SLASH, "/");
     strcat(SAFE_DIR_NO_SLASH, SAFE_FILENAME);
@@ -133,6 +133,7 @@ int init_module(void)
     HOOK_SCT(sct, rename);
     HOOK_SCT(sct, lstat);
     HOOK_SCT(sct, stat);
+    HOOK_SCT(sct, newfstatat);
 
     HOOK_SCT(sct, open);
     HOOK_SCT(sct, creat);
@@ -166,7 +167,7 @@ void cleanup_module(void)
     UNHOOK_SCT(sct, rename);
     UNHOOK_SCT(sct, lstat);
     UNHOOK_SCT(sct, stat);
-
+    UNHOOK_SCT(sct, newfstatat);
     UNHOOK_SCT(sct, open);
     UNHOOK_SCT(sct, creat);
     UNHOOK_SCT(sct, openat);
@@ -400,6 +401,22 @@ asmlinkage long fake_lstat(const char __user *filename, struct __old_kernel_stat
         }
     }
     return real_lstat(filename, statbuf);
+}
+asmlinkage long fake_newfstatat(int dfd, const char __user *filename, struct stat __user *statbuf, int flag)
+{
+    char full[PATH_MAX];
+    get_simplified_path_from_directory_fd(dfd, current, filename, full);
+    if (is_target(full) && is_user_valid())
+    {
+        if (is_process_valid(current))
+            fm_alert("[Vaild] newfstatat: %s\n", full);
+        else
+        {
+            fm_alert("[Invaild] newfstatat: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
+            return -28;
+        }
+    }
+    return fake_newfstatat(dfd, filename, statbuf, flag);
 }
 asmlinkage long fake_rename(const char __user *oldname, const char __user *newname)
 {

@@ -1,6 +1,5 @@
 #include "tools.h"
 
-
 #define AES_BLOCK_SIZE 16
 #define N 256
 
@@ -12,13 +11,13 @@
  * @return int      whether the function succeeds
  */
 int get_filename_from_struct_path(struct path *filepath, char *filename)
-{   
+{
     char *buf = (char *)__get_free_page(GFP_KERNEL);
     char *tmp_filename;
     if (!buf)
         return -1;
     tmp_filename = dentry_path_raw(filepath->dentry, buf, PATH_MAX - 1);
-    
+
     if (IS_ERR(tmp_filename))
     {
         free_page((unsigned long)buf);
@@ -48,8 +47,8 @@ int get_filename_from_struct_file(struct file *file, char *filename)
  * @param fd                the file descriptor in ts
  * @return struct file*     the struct file
  */
-struct file* get_struct_file_from_fd(struct task_struct *ts, unsigned int fd)
-{   
+struct file *get_struct_file_from_fd(struct task_struct *ts, unsigned int fd)
+{
     struct files_struct *files = ts->files;
     spin_lock(&files->file_lock);
     struct file *file = fcheck_files(files, fd);
@@ -60,7 +59,6 @@ struct file* get_struct_file_from_fd(struct task_struct *ts, unsigned int fd)
     }
     spin_unlock(&files->file_lock);
     return file;
-    
 }
 
 /**
@@ -72,7 +70,7 @@ struct file* get_struct_file_from_fd(struct task_struct *ts, unsigned int fd)
  * @return int      whether the function succeeds
  */
 int get_filename_from_fd(struct task_struct *ts, unsigned int fd, char *filename)
-{   
+{
     struct file *file = get_struct_file_from_fd(ts, fd);
     if (!file)
         return -1;
@@ -95,6 +93,7 @@ int get_current_working_dir(struct task_struct *ts, char *dir_path)
 }
 /**
  * @brief Get the absolute path from struct task_struct and given filename
+ *        if filename is relative, using cwd as parent dir from ts
  * 
  * @param ts                the struct task_struct
  * @param filename          the filename
@@ -130,8 +129,8 @@ int *get_absolute_path(struct task_struct *ts, const char *filename, char *absol
  * @param absolute_path     the absolute path
  * @param simplified_path   the simplified path result
  * @return int              whether the function succeeds 
- */     
-int get_simpified_path(const char *absolute_path,char *simplified_path)
+ */
+int get_simpified_path(const char *absolute_path, char *simplified_path)
 {
     struct NODE *head = (struct NODE *)kmalloc(sizeof(struct NODE), GFP_KERNEL);
     head->nex = NULL;
@@ -205,7 +204,6 @@ int get_simpified_path(const char *absolute_path,char *simplified_path)
         }
         else
             p = p->nex;
-        
     }
     struct NODE *a = head->nex;
     simplified_path[0] = '\0';
@@ -226,10 +224,10 @@ int get_simpified_path(const char *absolute_path,char *simplified_path)
  * @param absolute_path     the absolute path result, must allocate memory before calling it
  * @return int              whether the function succeeds
  */
-int get_simplified_path_from_struct_task(struct task_struct *ts,const char*filename,char* absolute_path)
+int get_simplified_path_from_struct_task(struct task_struct *ts, const char *filename, char *absolute_path)
 {
     get_absolute_path(ts, filename, absolute_path);
-    return get_simpified_path(absolute_path,absolute_path);
+    return get_simpified_path(absolute_path, absolute_path);
 }
 /**
  * @brief Get the simplified path from struct task and directory's file descriptor and filename (either relative or absolute)
@@ -242,11 +240,14 @@ int get_simplified_path_from_struct_task(struct task_struct *ts,const char*filen
  */
 int get_simplified_path_from_directory_fd(int dfd, struct task_struct *ts, const char *filename, char *absolute_path)
 {
-    if (filename[0] == '/')//already absolute
+    if (dfd == AT_FDCWD)
+        return get_simplified_path_from_struct_task(ts, filename, absolute_path);
+
+    if (filename[0] == '/') //already absolute
         strcpy(absolute_path, filename);
     else
-    {   //relative
-        get_filename_from_fd(ts, dfd, absolute_path);//directory path
+    {                                                        //relative
+        get_filename_from_fd(ts, dfd, absolute_path);        //directory path
         if (absolute_path[strlen(absolute_path) - 1] != '/') //not endwith '/'
             strcat(absolute_path, "/");                      //add '/'
         strcat(absolute_path, filename);
@@ -278,7 +279,7 @@ int KSA(char *key, unsigned char *S, int n)
     for (i = 0; i < n; i++)
     {
         j = (j + S[i] + key[i % len]) % n;
-        swap_two_array(&S[i],&S[j]);
+        swap_two_array(&S[i], &S[j]);
     }
 
     return 0;

