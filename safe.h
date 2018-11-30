@@ -16,9 +16,9 @@
 #include "zeroevil/zeroevil.h"
 #include "tools/tools.h"
 
-#define SECRET_FILE "safe"
-#define SAFE_DIR "/home/xytao/safe"
-#define SAFE_PARENT_DIR "/home/xytao"
+#define SAFE_PARENT_PATHNAME "/home/xytao"
+#define SAFE_FILENAME "safe"
+
 #define ALLOWED_UID 1000
 #define NETLINK_USER 31
 #define DEFAULT_PASS "12345"

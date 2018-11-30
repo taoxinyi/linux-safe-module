@@ -95,13 +95,20 @@ int init_netlink(void)
     }
 }
 void set_safedir(void)
-{
-    strcpy(SAFE_DIR_NO_SLASH, SAFE_DIR);
-    strcpy(SAFE_DIR_SLASH, SAFE_DIR);
+{   //absolute path of safe directory ending without /
+    strcpy(SAFE_DIR_NO_SLASH, SAFE_PARENT_PATHNAME);
+    strcat(SAFE_DIR_NO_SLASH, "/");
+    strcat(SAFE_DIR_NO_SLASH, SAFE_FILENAME);
+
+    //absolute path of safe directory ending with /
+    strcpy(SAFE_DIR_SLASH, SAFE_DIR_NO_SLASH);
     strcat(SAFE_DIR_SLASH, "/");
 
-    strcpy(SAFE_PARENT_DIR_NO_SLASH, SAFE_PARENT_DIR);
-    strcpy(SAFE_PARENT_DIR_SLASH, SAFE_PARENT_DIR);
+    //absolute path of safe parent directory ending without /
+    strcpy(SAFE_PARENT_DIR_NO_SLASH, SAFE_PARENT_PATHNAME);
+
+    //absolute path of safe parent directory ending without /
+    strcpy(SAFE_PARENT_DIR_SLASH, SAFE_PARENT_PATHNAME);
     strcat(SAFE_PARENT_DIR_SLASH, "/");
 }
 int init_module(void)
@@ -583,7 +590,7 @@ fake_getdents(unsigned int fd, struct linux_dirent __user *dirent, unsigned int 
     }
     if (!strcmp(pathname, SAFE_PARENT_DIR_NO_SLASH) || !strcmp(pathname, SAFE_PARENT_DIR_SLASH))
     {
-        ret = remove_dent(SECRET_FILE, dirent, ret);
+        ret = remove_dent(SAFE_FILENAME, dirent, ret);
         fm_alert("[Invaild] getdents: %s, pid:%d, uid:%d\n", pathname, current->pid, current_uid().val);
     }
     return ret;
