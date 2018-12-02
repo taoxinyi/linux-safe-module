@@ -1,0 +1,17 @@
+#!/bin/bash
+set -x 			 #echo commands as well as execute them
+ls     			 #getdents in parent dir
+ls safe			 #getdents in target dir	
+cd /home/xytao/safe	 #chdir in simplified absolute path
+cd Desktop/../safe	 #chdir in absolute path with ..
+cd safe			 #chdir in relative path 
+mkdir safe	         #mkdir
+find safe		 #newfstatat, openat
+mv test.py safe          #lsat,rename
+mv safe/test.py .	 #lsat,rename
+mv safe safe2		 #lsat,rename
+cat safe/test.py	 #open,read
+rm -r safe 		 #newfstatat, unlink
+ln -s /home/xytao/safe \
+      /home/xytao/safe2  #symlink
+cp -R safe safe2	 #stat
