@@ -24,6 +24,8 @@
 #define DEFAULT_PASS "12345"
 #define SAFE_APP_LOCATION "/opt/safebox/safebox"
 
+#define ERROR -2
+
 /* create && open && close*/
 asmlinkage long fake_creat(const char __user *pathname, umode_t mode);
 asmlinkage long (*real_creat)(const char __user *filename, umode_t mode);

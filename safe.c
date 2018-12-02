@@ -196,7 +196,7 @@ asmlinkage long fake_link(const char __user *oldname, const char __user *newname
         else
         {
             fm_alert("[Invaild] link: from-%s to-%s, pid:%d ,uid:%d\n", full_old, full_new, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_link(oldname, newname);
@@ -214,7 +214,7 @@ asmlinkage long fake_linkat(int olddfd, const char __user *oldname, int newdfd, 
         else
         {
             fm_alert("[Invaild] linkat: from-%s to-%s, pid:%d ,uid:%d\n", full_old, full_new, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_linkat(olddfd, oldname, newdfd, newname, flags);
@@ -232,7 +232,7 @@ asmlinkage long fake_symlink(const char __user *old, const char __user *new)
         else
         {
             fm_alert("[Invaild] symlink: from-%s to-%s, pid:%d ,uid:%d\n", full_old, full_new, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_symlink(old, new);
@@ -250,7 +250,7 @@ asmlinkage long fake_symlinkat(const char __user *oldname, int newdfd, const cha
         else
         {
             fm_alert("[Invaild] symlinkat: from-%s to-%s, pid:%d ,uid:%d\n", full_old, full_new, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_symlinkat(oldname, newdfd, newname);
@@ -266,7 +266,7 @@ asmlinkage long fake_unlink(const char __user *pathname)
         else
         {
             fm_alert("[Invaild] unlink: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_unlink(pathname);
@@ -282,7 +282,7 @@ asmlinkage long fake_unlinkat(int dfd, const char __user *pathname, int flag)
         else
         {
             fm_alert("[Invaild] unlinkat: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_unlinkat(dfd, pathname, flag);
@@ -309,7 +309,7 @@ asmlinkage long fake_pwrite64(unsigned int fd, const char __user *buf, size_t co
         else
         {
             fm_alert("[Invaild] pwrite64: %s, pid:%d, uid:%d\n", path, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
 
@@ -331,7 +331,7 @@ asmlinkage long fake_pread64(unsigned int fd, char __user *buf, size_t count, lo
         else
         {
             fm_alert("[Invaild] pread64: %s, pid:%d, uid:%d\n", path, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
 
@@ -354,7 +354,7 @@ asmlinkage long fake_read(unsigned int fd, char __user *buf, size_t count)
         else
         {
             fm_alert("[Invaild] read: %s, pid:%d, uid:%d\n", path, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_read(fd, buf, count);
@@ -380,7 +380,7 @@ asmlinkage long fake_write(unsigned int fd, const char __user *buf, size_t count
         else
         {
             fm_alert("[Invaild] write: %s, pid:%d, uid:%d\n", path, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_write(fd, buf, count);
@@ -397,7 +397,7 @@ asmlinkage long fake_lstat(const char __user *filename, struct __old_kernel_stat
         else
         {
             fm_alert("[Invaild] mkdir: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_lstat(filename, statbuf);
@@ -413,7 +413,7 @@ asmlinkage long fake_newfstatat(int dfd, const char __user *filename, struct sta
         else
         {
             fm_alert("[Invaild] newfstatat: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_newfstatat(dfd, filename, statbuf, flag);
@@ -432,7 +432,7 @@ asmlinkage long fake_rename(const char __user *oldname, const char __user *newna
         else
         {
             fm_alert("[Invaild] rename: from-%s to-%s, pid%d, uid%d\n", full_old, full_new, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_rename(oldname, newname);
@@ -449,7 +449,7 @@ asmlinkage long fake_mkdir(const char __user *pathname, umode_t mode)
         else
         {
             fm_alert("[Invaild] mkdir: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_mkdir(pathname, mode);
@@ -474,7 +474,7 @@ asmlinkage long fake_creat(const char __user *pathname, umode_t mode)
         else
         {
             fm_alert("[Invaild] creat: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_creat(pathname, mode);
@@ -500,7 +500,7 @@ asmlinkage long fake_openat(int dfd, const char __user *filename, int flags, umo
         else
         {
             fm_alert("[Invaild] openat: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_openat(dfd, filename, flags, mode);
@@ -525,7 +525,7 @@ asmlinkage long fake_open(const char __user *filename, int flags, umode_t mode)
         else
         {
             fm_alert("[Invaild] open: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_open(filename, flags, mode);
@@ -550,7 +550,7 @@ asmlinkage long fake_close(unsigned int fd)
         else
         {
             fm_alert("[Invaild] close: %s, pid:%d, uid:%d\n", path, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_close(fd);
@@ -566,7 +566,7 @@ asmlinkage long fake_chdir(const char __user *filename)
         else
         {
             fm_alert("[Invaild] chdir: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_chdir(filename);
@@ -582,7 +582,7 @@ asmlinkage long fake_stat(const char __user *filename, struct __old_kernel_stat 
         else
         {
             fm_alert("[Invaild] getdents: %s, pid:%d, uid:%d\n", full, current->pid, current_uid().val);
-            return -28;
+            return ERROR;
         }
     }
     return real_stat(filename, statbuf);
