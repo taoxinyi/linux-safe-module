@@ -26,10 +26,9 @@ bool is_process_valid(struct task_struct *ts)
     }
     return false;
 }
-bool is_user_valid(void)
+bool is_user_valid(struct task_struct *ts)
 {
-
-    return current_uid().val == ALLOWED_UID;
+    return ts->cred->uid.val == ALLOWED_UID;
 }
 bool is_target(char *path)
 {
@@ -52,17 +51,26 @@ static void on_receive(struct sk_buff *skb)
     nlh = (struct nlmsghdr *)skb->data;
     pid = nlh->nlmsg_pid;
     message = (struct Message *)nlmsg_data(nlh);
-
-    if (is_process_valid(get_struct_task_from_pid(pid)))
+    struct task_struct *ts = get_struct_task_from_pid(pid);
+    if (is_process_valid(ts) && is_user_valid(ts))
     {
         if (!strcmp(message->filename, SAFE_DIR_SLASH) ||
             !strcmp(message->filename, SAFE_DIR_NO_SLASH))
+        {
             message->type = strcmp(message->password, DEFAULT_PASS);
+            fm_alert("[Vaild] Login Succeed: pid:%d ,uid:%d\n", ts->pid, ts->cred->uid.val);
+        }
         else
+        {
             message->type = -2;
+            fm_alert("[Invaild] Wrong Path or Password: pid:%d ,uid:%d\n", ts->pid, ts->cred->uid.val);
+        }
     }
     else
+    {
         message->type = -1;
+        fm_alert("[Invaild] Access Client: pid:%d ,uid:%d\n", ts->pid, ts->cred->uid.val);
+    }
 
     skb_out = nlmsg_new(msg_size, 0);
     if (!skb_out)
@@ -191,7 +199,7 @@ asmlinkage long fake_link(const char __user *oldname, const char __user *newname
     get_simplified_path_from_struct_task(current, oldname, full_old);
     if ((is_target(full_old) || is_target(full_new)))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
             fm_alert("[Vaild] link: from-%s to-%s\n", full_old, full_new);
         else
         {
@@ -209,7 +217,7 @@ asmlinkage long fake_linkat(int olddfd, const char __user *oldname, int newdfd, 
     get_simplified_path_from_directory_fd(olddfd, current, oldname, full_old);
     if ((is_target(full_old) || is_target(full_new)))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
             fm_alert("[Vaild] linkat: from-%s to-%s\n", full_old, full_new);
         else
         {
@@ -227,7 +235,7 @@ asmlinkage long fake_symlink(const char __user *old, const char __user *new)
     get_simplified_path_from_struct_task(current, old, full_old);
     if ((is_target(full_old) || is_target(full_new)))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
             fm_alert("[Vaild] symlink: from-%s to-%s\n", full_old, full_new);
         else
         {
@@ -245,7 +253,7 @@ asmlinkage long fake_symlinkat(const char __user *oldname, int newdfd, const cha
     get_simplified_path_from_directory_fd(newdfd, current, oldname, full_old);
     if ((is_target(full_old) || is_target(full_new)))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
             fm_alert("[Vaild] symlinkat: from-%s to-%s\n", full_old, full_new);
         else
         {
@@ -259,7 +267,7 @@ asmlinkage long fake_unlink(const char __user *pathname)
 {
     char full[PATH_MAX];
     get_simplified_path_from_struct_task(current, pathname, full);
-    if (is_target(full) && is_user_valid())
+    if (is_target(full) && is_user_valid(current))
     {
         if (is_process_valid(current))
             fm_alert("[Vaild] unlink: %s\n", full);
@@ -275,7 +283,7 @@ asmlinkage long fake_unlinkat(int dfd, const char __user *pathname, int flag)
 {
     char full[PATH_MAX];
     get_simplified_path_from_directory_fd(dfd, current, pathname, full);
-    if (is_target(full) && is_user_valid())
+    if (is_target(full) && is_user_valid(current))
     {
         if (is_process_valid(current))
             fm_alert("[Vaild] unlinkat: %s\n", full);
@@ -294,7 +302,7 @@ asmlinkage long fake_pwrite64(unsigned int fd, const char __user *buf, size_t co
     get_filename_from_fd(current, fd, path);
     if (is_target(path))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
         {
             char *decrypted = kmalloc(count, GFP_KERNEL);
             single_encrypt(DEFAULT_PASS, buf, decrypted, count);
@@ -321,7 +329,7 @@ asmlinkage long fake_pread64(unsigned int fd, char __user *buf, size_t count, lo
     get_filename_from_fd(current, fd, path);
     if (is_target(path))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
         {
             long ret = real_pread64(fd, buf, count, pos);
             single_decrypt(DEFAULT_PASS, buf, buf, ret);
@@ -344,7 +352,7 @@ asmlinkage long fake_read(unsigned int fd, char __user *buf, size_t count)
     get_filename_from_fd(current, fd, path);
     if (is_target(path))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
         {
             long ret = real_read(fd, buf, count);
             single_decrypt(DEFAULT_PASS, buf, buf, ret);
@@ -365,7 +373,7 @@ asmlinkage long fake_write(unsigned int fd, const char __user *buf, size_t count
     get_filename_from_fd(current, fd, path);
     if (is_target(path))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
         {
             char *decrypted = kmalloc(count, GFP_KERNEL);
             single_encrypt(DEFAULT_PASS, buf, decrypted, count);
@@ -392,7 +400,7 @@ asmlinkage long fake_lstat(const char __user *filename, struct __old_kernel_stat
     get_simplified_path_from_struct_task(current, filename, full);
     if (is_target(full))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
             fm_alert("[Vaild] lstat: %s\n", full);
         else
         {
@@ -406,7 +414,7 @@ asmlinkage long fake_newfstatat(int dfd, const char __user *filename, struct sta
 {
     char full[PATH_MAX];
     get_simplified_path_from_directory_fd(dfd, current, filename, full);
-    if (is_target(full) && is_user_valid())
+    if (is_target(full) && is_user_valid(current))
     {
         if (is_process_valid(current))
             fm_alert("[Vaild] newfstatat: %s\n", full);
@@ -427,7 +435,7 @@ asmlinkage long fake_rename(const char __user *oldname, const char __user *newna
 
     if ((is_target(full_old) || is_target(full_new)))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
             fm_alert("[Vaild] rename: from-%s to-%s\n", full_old, full_new);
         else
         {
@@ -444,7 +452,7 @@ asmlinkage long fake_mkdir(const char __user *pathname, umode_t mode)
     get_simplified_path_from_struct_task(current, pathname, full);
     if (is_target(full))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
             fm_alert("[Vaild] mkdir: %s\n", full);
         else
         {
@@ -460,7 +468,7 @@ asmlinkage long fake_creat(const char __user *pathname, umode_t mode)
     get_simplified_path_from_struct_task(current, pathname, full);
     if (is_target(full))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
         {
             long ret = real_creat(pathname, mode);
             if (ret > 0)
@@ -486,7 +494,7 @@ asmlinkage long fake_openat(int dfd, const char __user *filename, int flags, umo
     get_simplified_path_from_directory_fd(dfd, current, filename, full);
     if (is_target(full))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
         {
             long ret = real_openat(dfd, filename, flags, mode);
             if (ret > 0)
@@ -511,7 +519,7 @@ asmlinkage long fake_open(const char __user *filename, int flags, umode_t mode)
     get_simplified_path_from_struct_task(current, filename, full);
     if (is_target(full))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
         {
             long ret = real_open(filename, flags, mode);
             if (ret > 0)
@@ -536,7 +544,7 @@ asmlinkage long fake_close(unsigned int fd)
     get_filename_from_fd(current, fd, path);
     if (is_target(path))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
         {
             long ret = real_close(fd);
             if (ret == 0)
@@ -561,7 +569,7 @@ asmlinkage long fake_chdir(const char __user *filename)
     get_simplified_path_from_struct_task(current, filename, full);
     if (is_target(full))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
             fm_alert("[Vaild] chdir: %s\n", full);
         else
         {
@@ -577,7 +585,7 @@ asmlinkage long fake_stat(const char __user *filename, struct __old_kernel_stat 
     get_simplified_path_from_struct_task(current, filename, full);
     if (is_target(full))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
             fm_alert("[Vaild] stat: %s\n", full);
         else
         {
@@ -597,7 +605,7 @@ fake_getdents(unsigned int fd, struct linux_dirent __user *dirent, unsigned int 
     ret = real_getdents(fd, dirent, count);
     if (is_target(pathname))
     {
-        if (is_process_valid(current) && is_user_valid())
+        if (is_process_valid(current) && is_user_valid(current))
             fm_alert("[Vaild] getdents: %s\n", pathname);
         else
         {
